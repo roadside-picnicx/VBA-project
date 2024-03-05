@@ -1,9 +1,14 @@
-
 {
-    "person": {
-      "name": "John Doe",
-      "age": 25,
-      "salary": 50000.50
-    }
-  }
-  
+  "people": [
+      {
+          "name": "John Doe",
+          "age": 25,
+          "salary": 50000.50
+      },
+      {
+          "name": "Jane Doe",
+          "age": 30,
+          "salary": 60000.75
+      }
+  ]
+}

@@ -3,7 +3,6 @@
 #include <string.h>
 #include "cJSON/cJSON.h"
 
-
 typedef struct {
     char *name;
     int age;
@@ -11,13 +10,10 @@ typedef struct {
 } Person;
 
 int main() {
-    FILE *file;
-    cJSON *json;
-    char *json_string;
-
-    file = fopen("data.json", "r");
+    // Part of the code for reading JSON and getting data into memory
+    FILE *file = fopen("data.json", "r");
     if (file == NULL) {
-        fprintf(stderr, "Error occured when trying to open file.\n");
+        fprintf(stderr, "Error occurred when trying to open file.\n");
         return 1;
     }
 
@@ -31,7 +27,7 @@ int main() {
 
     file_content[file_size] = '\0';
 
-    json = cJSON_Parse(file_content);
+    cJSON *json = cJSON_Parse(file_content);
     free(file_content);
 
     if (json == NULL) {
@@ -39,44 +35,65 @@ int main() {
         return 1;
     }
 
-    // Getting data from json
-    cJSON *person_json = cJSON_GetObjectItem(json, "person");
-    Person person;
-    person.name = strdup(cJSON_GetObjectItem(person_json, "name")->valuestring);
-    person.age = cJSON_GetObjectItem(person_json, "age")->valueint;
-    person.salary = cJSON_GetObjectItem(person_json, "salary")->valuedouble;
+    cJSON *people_array = cJSON_GetObjectItem(json, "people");
+    if (people_array == NULL || !cJSON_IsArray(people_array)) {
+        fprintf(stderr, "Invalid or missing 'people' array in JSON.\n");
+        cJSON_Delete(json);
+        return 1;
+    }
 
+    int num_people = cJSON_GetArraySize(people_array);
 
-    // Print data
-    printf("Name: %s\n", person.name);
-    printf("Age: %d\n", person.age);
-    printf("Salary: %.2f\n", person.salary);
+    // Memory allocation for an array of people
+    Person *people = (Person *)malloc(num_people * sizeof(Person));
 
-    
+    // Getting data from JSON into memory
+    for (int i = 0; i < num_people; ++i) {
+        cJSON *person_json = cJSON_GetArrayItem(people_array, i);
+
+        people[i].name = strdup(cJSON_GetObjectItem(person_json, "name")->valuestring);
+        people[i].age = cJSON_GetObjectItem(person_json, "age")->valueint;
+        people[i].salary = cJSON_GetObjectItem(person_json, "salary")->valuedouble;
+    }
+
     cJSON_Delete(json);
 
- 
     cJSON *new_json = cJSON_CreateObject();
-    cJSON_AddItemToObject(new_json, "person", cJSON_CreateObject());
-    cJSON_AddStringToObject(new_json, "name", person.name);
-    cJSON_AddNumberToObject(new_json, "age", person.age);
-    cJSON_AddNumberToObject(new_json, "salary", person.salary);
+    cJSON *new_people_array = cJSON_CreateArray();
 
-    json_string = cJSON_Print(new_json);
+    // Adding individual persons to an array in JSON
+    for (int i = 0; i < num_people; ++i) {
+        cJSON *person_json = cJSON_CreateObject();
+        cJSON_AddStringToObject(person_json, "name", people[i].name);
+        cJSON_AddNumberToObject(person_json, "age", people[i].age);
+        cJSON_AddNumberToObject(person_json, "salary", people[i].salary);
+        cJSON_AddItemToArray(new_people_array, person_json);
+    }
 
-    file = fopen("output.json", "w");
-    if (file == NULL) {
+    // Adding a person field to the main JSON object
+    cJSON_AddItemToObject(new_json, "people", new_people_array);
+
+    // Conversion to text
+    char *json_string = cJSON_Print(new_json);
+
+    // Saving into file
+    FILE *output_file = fopen("output.json", "w");
+    if (output_file == NULL) {
         fprintf(stderr, "Error when trying to write into file.\n");
         return 1;
     }
 
-    fprintf(file, "%s", json_string);
+    fprintf(output_file, "%s", json_string);
 
     // Releasing memory
-    fclose(file);
-    free(person.name);
+    fclose(output_file);
     cJSON_Delete(new_json);
     free(json_string);
+
+    for (int i = 0; i < num_people; ++i) {
+        free(people[i].name);
+    }
+    free(people);
 
     return 0;
 }
