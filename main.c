@@ -40,7 +40,7 @@ void freeKeyValueList(KeyValue *list) {
 Person *loadData(const char *filename, int *num_people) {
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
-        fprintf(stderr, "Error occurred when trying to open file.\n");
+        fprintf(stderr, "Error occurred when trying to open file '%s'.\n", filename);
         return NULL;
     }
 
@@ -54,10 +54,16 @@ Person *loadData(const char *filename, int *num_people) {
 
     file_content[file_size] = '\0';
 
+    printf("File content: %s\n", file_content); // Diagnostic print
+
     cJSON *json = cJSON_Parse(file_content);
     free(file_content);
 
     if (json == NULL) {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL) {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
         fprintf(stderr, "Error when parsing JSON.\n");
         return NULL;
     }
@@ -73,6 +79,12 @@ Person *loadData(const char *filename, int *num_people) {
 
     // Memory allocation for an array of people
     Person *people = (Person *)malloc((*num_people) * sizeof(Person));
+
+    if (people == NULL) {
+        fprintf(stderr, "Memory allocation failed.\n");
+        cJSON_Delete(json);
+        return NULL;
+    }
 
     // Getting data from JSON into memory
     for (int i = 0; i < *num_people; ++i) {
@@ -101,6 +113,8 @@ Person *loadData(const char *filename, int *num_people) {
     return people;
 }
 
+
+
 // Print data of specific person
 void printPersonData(const Person *person) {
     printf("Person ID: %d\n", person->id);
@@ -114,7 +128,7 @@ void printPersonData(const Person *person) {
     printf("\n");
 }
 
-// FModify data for a specific person
+// Modify data for a specific person
 void modifyPersonData(Person *person) {
     int choice;
 
@@ -161,13 +175,11 @@ void modifyPersonData(Person *person) {
             }
             break;
 
-                default:
-                    printf("Invalid choice.\n");
-                    break;
-            }
+        default:
+            printf("Invalid choice.\n");
+            break;
+    }
 }
-
-
 
 // Function to save modified data back to a file
 void saveData(const char *filename, Person *people, int num_people) {
@@ -235,23 +247,64 @@ void saveData(const char *filename, Person *people, int num_people) {
     free(json_string);
 }
 
+// Function to free memory allocated for Person array
+void freePeople(Person *people, int num_people) {
+    if (people == NULL) {
+        return; // Nothing to free
+    }
+
+    for (int i = 0; i < num_people; ++i) {
+        freeKeyValueList(people[i].data);
+    }
+
+    free(people);
+}
+
+void modifyDataBasedOnID(Person *people, int num_people) {
+    // Modify data based on person ID
+    int personID;
+    do {
+        printf("Enter the ID of the person to modify (or enter 0 to return to the main menu): ");
+        scanf("%d", &personID);
+
+        // Consume the newline character left in the input buffer
+        getchar();
+
+        if (personID == 0) {
+            // Return to main menu
+            return;
+        }
+
+        // Find the person with the specified ID
+        Person *targetPerson = NULL;
+        for (int i = 0; i < num_people; ++i) {
+            if (people[i].id == personID) {
+                targetPerson = &people[i];
+                break;
+            }
+        }
+
+        if (targetPerson != NULL) {
+            modifyPersonData(targetPerson);
+        } else {
+            printf("Person with ID %d not found.\n", personID);
+        }
+    } while (personID != 0);  // Continue until user chooses to return to main menu
+}
+
+
 int main() {
     int num_people;
     Person *people = NULL;
 
-    // Load data from a file
-    people = loadData("data.json", &num_people);
-    if (people == NULL) {
-        return 1;
-    }
-
     int choice;
+    char file_name[100];
 
     // Menu loop
     do {
         // Print menu options
         printf("Menu Options:\n");
-        printf("1. See loaded data\n");
+        printf("1. Load data\n");
         printf("2. Modify data based on person ID\n");
         printf("3. Save data to output file\n");
         printf("4. Exit\n");
@@ -265,12 +318,56 @@ int main() {
 
         switch (choice) {
             case 1:
-                // See loaded data
-                for (int i = 0; i < num_people; ++i) {
-                    printf("Person %d:\n", i + 1);
-                    printPersonData(&people[i]);
+
+                printf("Choose file to load: ");
+                scanf("%s", file_name);
+
+                // Load data from a file
+                people = loadData(file_name, &num_people);
+                if (people == NULL) {
+                    return 1;
+                } else {
+                    int sub_choice;
+                    do {
+                        printf("\nLoad data - menu:\n");
+                        printf("1. Print data\n");
+                        printf("2. Modify data based on ID\n");
+                        printf("3. Delete data based on ID\n");
+                        printf("4. Save data to file\n");
+                        printf("5. Return to Main menu\n");
+                        printf("Enter your choice: ");
+                        scanf("%d", &sub_choice);
+
+                        switch (sub_choice) {
+                            case 1:
+                                for (int i = 0; i < num_people; ++i) {
+                                    printf("Person %d:\n", i + 1);
+                                    printPersonData(&people[i]);
+                                }
+                                break;
+                            case 2:
+                                printf("Modify data based on ID\n");
+                                modifyDataBasedOnID(people, num_people);
+                                break;
+                            case 3:
+                                printf("Delete data based on ID\n");
+                                break;
+                            case 4:
+                                printf("Save data to file.");
+                                saveData(file_name, people, num_people);
+                                break;
+                            case 5:
+                                // Return to Main menu
+                                break;
+                            default:
+                                printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                                break;
+                        }
+                    } while (sub_choice != 5);
                 }
-                break;
+                freePeople(people, num_people);
+                num_people = 0;
+                break;  // Don't forget to break after each case
 
             case 2:
                 // Modify data based on person ID
@@ -312,10 +409,7 @@ int main() {
     } while (choice != 4);
 
     // Release memory
-    for (int i = 0; i < num_people; ++i) {
-        freeKeyValueList(people[i].data);
-    }
-    free(people);
+    freePeople(people, num_people);
 
     return 0;
 }
