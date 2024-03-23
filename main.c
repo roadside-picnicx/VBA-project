@@ -113,7 +113,58 @@ Person *loadData(const char *filename, int *num_people) {
     return people;
 }
 
+// Function to add new data to the memory based on existing keys
+void addNewData(Person **people, int *num_people) {
+    // Find all unique keys present in the loaded data
+    char **keys = NULL;
+    int num_keys = 0;
 
+    // Iterate through existing people to find unique keys
+    for (int i = 0; i < *num_people; ++i) {
+        KeyValue *current = (*people)[i].data;
+        while (current != NULL) {
+            // Check if the key is already present in the keys array
+            int found = 0;
+            for (int j = 0; j < num_keys; ++j) {
+                if (strcmp(current->key, keys[j]) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+            // If the key is not already present, add it to the keys array
+            if (!found) {
+                num_keys++;
+                keys = (char **)realloc(keys, num_keys * sizeof(char *));
+                keys[num_keys - 1] = strdup(current->key);
+            }
+            current = current->next;
+        }
+    }
+
+    // Create a new person object with ID 3
+    Person new_person;
+    new_person.id = 3;
+    new_person.data = NULL;
+
+    // Prompt the user for values corresponding to the keys and add them to the new person object
+    for (int j = 0; j < num_keys; ++j) {
+        char value[100];
+        printf("Enter value for key %s: ", keys[j]);
+        scanf("%99s", value);
+        addKeyValue(&(new_person.data), keys[j], value);
+    }
+
+    // Add the new person object to the existing people array
+    *num_people += 1;
+    *people = (Person *)realloc(*people, (*num_people) * sizeof(Person));
+    (*people)[*num_people - 1] = new_person;
+
+    // Free the memory allocated for keys
+    for (int i = 0; i < num_keys; ++i) {
+        free(keys[i]);
+    }
+    free(keys);
+}
 
 // Print data of specific person
 void printPersonData(const Person *person) {
@@ -312,97 +363,8 @@ void deletePersonByID(Person *people, int *num_people, int id) {
     printf("Person with ID %d not found.\n", id);
 }
 
-void createNewJSON(const char *filename) {
-    FILE *file = fopen(filename, "w");
-    if (file == NULL) {
-        fprintf(stderr, "Error occurred when trying to create file '%s'.\n", filename);
-        return;
-    }
-    fclose(file);
-    printf("New JSON file '%s' created.\n", filename);
-}
-
-// Function to create new keys in the JSON file
-void createNewKeys(cJSON *json) {
-    char key[100];
-    int num_keys;
-
-    printf("Enter the number of keys to add: ");
-    if (scanf("%d", &num_keys) != 1) {
-        printf("Error: Invalid input for number of keys.\n");
-        return;
-    }
-    getchar(); // Consume newline character
-
-    for (int i = 0; i < num_keys; ++i) {
-        printf("Enter key %d: ", i + 1);
-        if (fgets(key, sizeof(key), stdin) == NULL) {
-            printf("Error: Unable to read input.\n");
-            return;
-        }
-        key[strcspn(key, "\n")] = '\0'; // Remove trailing newline character
-
-        // Add key to the JSON object with cJSON_NULL value
-        cJSON_AddItemToObject(json, key, cJSON_CreateNull());
-        if (json == NULL) {
-            printf("Error: Unable to add key '%s' to JSON object.\n", key);
-            return;
-        }
-    }
-
-    printf("New keys added to the JSON object.\n");
-}
-
-int personIDCount = 1;
-void createPersonData(cJSON *json) {
-    if (json == NULL) {
-        printf("Error: cJSON object is NULL.\n");
-        return;
-    }
-
-    cJSON *person_json = cJSON_CreateObject();
-    if (person_json == NULL) {
-        printf("Error: Failed to create cJSON object for person data.\n");
-        return;
-    }
-
-    cJSON *key = NULL;
-    cJSON_ArrayForEach(key, json) {
-        if (strcmp(key->string, "people") != 0) {
-            const char *keyName = key->string;
-            char value[100];
-
-            printf("Enter value for key '%s': ", keyName);
-            if (scanf("%s", value) != 1) {
-                printf("Error: Invalid input for value.\n");
-                cJSON_Delete(person_json); // Cleanup cJSON object
-                return;
-            }
-
-            cJSON_AddStringToObject(person_json, keyName, value);
-        }
-    }
-
-    // Add ID to cJSON object (in lowercase)
-    cJSON_AddNumberToObject(person_json, "id", personIDCount++);
-    
-    cJSON *people_array = cJSON_GetObjectItem(json, "people");
-    if (people_array == NULL) {
-        people_array = cJSON_AddArrayToObject(json, "people");
-        if (people_array == NULL) {
-            printf("Error: Failed to create cJSON array for people.\n");
-            cJSON_Delete(person_json); // Cleanup cJSON object
-            return;
-        }
-    }
-
-    cJSON_AddItemToArray(people_array, person_json);
-
-    printf("Person data added to the JSON object.\n");
-}
-
 int main() {
-    int num_people;
+    int num_people = 0;
     Person *people = NULL;
 
     int choice;
@@ -413,9 +375,12 @@ int main() {
         // Print menu options
         printf("Menu Options:\n");
         printf("1. Load data from json file\n");
-        printf("2. Create new json file\n");
-        printf("3. Delete json file\n");
-        printf("4. Exit\n");
+        printf("2. Print data\n");
+        printf("3. Modify data based on ID\n");
+        printf("4. Delete data based on ID\n");
+        printf("5. Create new data\n");
+        printf("6. Save data to file\n");
+        printf("7. Exit\n");
 
         // Get user choice
         printf("Enter your choice: ");
@@ -426,151 +391,68 @@ int main() {
 
         switch (choice) {
             case 1:
-
                 printf("Choose file to load: ");
                 scanf("%s", file_name);
 
                 // Load data from a file
                 people = loadData(file_name, &num_people);
                 if (people == NULL) {
+                    printf("Loading data failed\n");
                     return 1;
                 } else {
-                    int sub_choice;
-                    do {
-                        printf("\nLoad data - menu:\n");
-                        printf("1. Print data\n");
-                        printf("2. Modify data based on ID\n");
-                        printf("3. Delete data based on ID\n");
-                        printf("4. Save data to file\n");
-                        printf("5. Return to Main menu\n");
-                        printf("Enter your choice: ");
-                        scanf("%d", &sub_choice);
-
-                        switch (sub_choice) {
-                            case 1:
-                                for (int i = 0; i < num_people; ++i) {
-                                    printf("Person %d:\n", i + 1);
-                                    printPersonData(&people[i]);
-                                }
-                                break;
-                            case 2:
-                                printf("Modify data based on ID\n");
-                                modifyDataBasedOnID(people, num_people);
-                                break;
-                            case 3:
-                                int personID;
-                                if (num_people == 0) {
-                                    printf("No data to delete.\n");
-                                    break;
-                                }
-
-                                printf("Enter the ID of the person to delete: ");
-                                scanf("%d", &personID);
-
-                                deletePersonByID(people, &num_people, personID);
-                                break;
-                            case 4:
-                                printf("Save data to file.");
-                                saveData(file_name, people, num_people);
-                                break;
-                            case 5:
-                                // Return to Main menu
-                                break;
-                            default:
-                                printf("Invalid choice. Please enter a number between 1 and 4.\n");
-                                break;
-                        }
-                    } while (sub_choice != 5);
+                    printf("Data loaded succesfully\n");
                 }
-                freePeople(people, num_people);
-                num_people = 0;
-                break;  // Don't forget to break after each case
+                break; 
 
             case 2:
-                    // Create new JSON file and provide menu for manipulating data
-                    printf("Enter the name for the new JSON file: ");
-                    scanf("%s", file_name);
-
-                    createNewJSON(file_name); // Function to create new JSON file
-
-                    cJSON *json = cJSON_CreateObject(); // Create cJSON object for the new JSON file
-
-                    if (json == NULL) {
-                        printf("Error creating cJSON object.\n");
-                        break;
-                    }
-
-                    int sub_choice;
-                    do {
-                        // Print menu options
-                        printf("\nJSON File Manipulation Options:\n");
-                        printf("1. Print data\n");
-                        printf("2. Create new keys\n");
-                        printf("3. Create person data\n");
-                        printf("4. Edit person data\n");
-                        printf("5. Sabe data to json file\n");
-                        printf("6. Return to Main menu\n");
-                        printf("Enter your choice: ");
-                        scanf("%d", &sub_choice);
-
-                        // Consume the newline character left in the input buffer
-                        while (getchar() != '\n');
-
-                        switch (sub_choice) {
-                            case 1:
-                                // Print data
-                                // Implement function to print data
-                                break;
-                            case 2:
-                                // Create new keys
-                                createNewKeys(json);
-                                break;
-                            case 3:
-                                // Create person data
-                                createPersonData(json);
-                                break;
-                            case 4:
-                                // Edit person data
-                                // Implement function to edit person data
-                                //editPersonData(json);
-                                break;
-                            case 5:
-                                // Save data
-                                FILE *output_file = fopen(file_name, "w");
-                                if (output_file == NULL) {
-                                    printf("Error: Unable to open file for writing.\n");
-                                    return 1;
-                                }
-                                fprintf(output_file, "%s", cJSON_Print(json));
-                                fclose(output_file);
-                                printf("Data saved to json file.\n");
-                                break;
-                            case 6:
-                                break;
-                            default:
-                                printf("Invalid choice. Please enter a number between 1 and 5.\n");
-                                break;
-                        }
-                    } while (sub_choice != 6);
-
-                    // Free cJSON object
-                    cJSON_Delete(json);
-                    break;
+                for (int i = 0; i < num_people; ++i) {
+                    printf("Person %d:\n", i + 1);
+                    printPersonData(&people[i]);
+                }
+                break;
 
             case 3:
+                printf("Modify data based on ID\n");
+                modifyDataBasedOnID(people, num_people);
                 break;
+
             case 4:
-                // Exit
+                int personID;
+                if (num_people == 0) {
+                    printf("No data to delete.\n");
+                    break;
+                }
+
+                printf("Enter the ID of the person to delete: ");
+                scanf("%d", &personID);
+
+                deletePersonByID(people, &num_people, personID);
+                break;
+
+            case 5:
+                addNewData(&people, &num_people);
+                break;
+
+            case 6:
+                printf("Save data to file.\n");
+                saveData(file_name, people, num_people);
+                break;
+
+            case 7:
+                printf("Exiting program.\n");
                 break;
 
             default:
-                printf("Invalid choice. Please enter a number between 1 and 4.\n");
+                printf("Invalid choice. Please enter a number between 1 and 7.\n");
                 break;
         }
-    } while (choice != 4);
 
-    // Release memory
-    // freePeople(people, num_people);
+    } while (choice != 7);
 
+    // Free dynamically allocated memory before next iteration
+    freePeople(people, num_people);
+    people = NULL;
+    num_people = 0;
     return 0;
 }
+
