@@ -12,17 +12,32 @@ typedef struct KeyValue {
 
 // Structure to represent a person
 typedef struct {
-    int id;          // Identifier for each person
-    KeyValue *data;  // Linked list of key-value pairs
+    int id;         
+    KeyValue *data;  
 } Person;
 
 // Add a new key-value pair to the linked list
-void addKeyValue(KeyValue **list, const char *key, const char *value) {
+int addKeyValue(KeyValue **list, const char *key, const char *value) {
+    // Allocate memory for a new KeyValue node
     KeyValue *newNode = (KeyValue *)malloc(sizeof(KeyValue));
+    if (newNode == NULL) {
+        fprintf(stderr, "Memory allocation failed for new KeyValue node.\n");
+        return 0;
+    }
+
+    // Allocate memory for the key and value strings
     newNode->key = strdup(key);
     newNode->value = strdup(value);
+    if (newNode->key == NULL || newNode->value == NULL) {
+        fprintf(stderr, "Memory allocation failed for key or value string.\n");
+        free(newNode);
+        return 0;
+    }
+
     newNode->next = *list;
     *list = newNode;
+
+    return 1;
 }
 
 // Release memory allocated for the linked list
@@ -38,6 +53,7 @@ void freeKeyValueList(KeyValue *list) {
 
 // Function to load data from a file and parse it into memory
 Person *loadData(const char *filename, int *num_people) {
+    // File Opening and Reading
     FILE *file = fopen(filename, "r");
     if (file == NULL) {
         fprintf(stderr, "Error occurred when trying to open file '%s'.\n", filename);
@@ -54,8 +70,9 @@ Person *loadData(const char *filename, int *num_people) {
 
     file_content[file_size] = '\0';
 
-    printf("File content: %s\n", file_content); // Diagnostic print
+    printf("File content: %s\n", file_content);
 
+    // JSON Parsing
     cJSON *json = cJSON_Parse(file_content);
     free(file_content);
 
@@ -68,6 +85,7 @@ Person *loadData(const char *filename, int *num_people) {
         return NULL;
     }
 
+    // JSON Data Extraction
     cJSON *people_array = cJSON_GetObjectItem(json, "people");
     if (people_array == NULL || !cJSON_IsArray(people_array)) {
         fprintf(stderr, "Invalid or missing 'people' array in JSON.\n");
@@ -77,7 +95,7 @@ Person *loadData(const char *filename, int *num_people) {
 
     *num_people = cJSON_GetArraySize(people_array);
 
-    // Memory allocation for an array of people
+    // Memory Allocation
     Person *people = (Person *)malloc((*num_people) * sizeof(Person));
 
     if (people == NULL) {
@@ -86,7 +104,7 @@ Person *loadData(const char *filename, int *num_people) {
         return NULL;
     }
 
-    // Getting data from JSON into memory
+    // Data Population
     for (int i = 0; i < *num_people; ++i) {
         cJSON *person_json = cJSON_GetArrayItem(people_array, i);
 
@@ -108,8 +126,8 @@ Person *loadData(const char *filename, int *num_people) {
         }
     }
 
+    // Cleanup
     cJSON_Delete(json);
-
     return people;
 }
 
@@ -141,12 +159,12 @@ void addNewData(Person **people, int *num_people) {
         }
     }
 
-    // Create a new person object with ID 3
+    // Create a new person object
     Person new_person;
-    new_person.id = 3;
+    new_person.id = (*num_people) + 1;
     new_person.data = NULL;
 
-    // Prompt the user for values corresponding to the keys and add them to the new person object
+    // Prompt the user for values
     for (int j = 0; j < num_keys; ++j) {
         char value[100];
         printf("Enter value for key %s: ", keys[j]);
@@ -166,6 +184,7 @@ void addNewData(Person **people, int *num_people) {
     free(keys);
 }
 
+
 // Print data of specific person
 void printPersonData(const Person *person) {
     printf("Person ID: %d\n", person->id);
@@ -183,7 +202,6 @@ void printPersonData(const Person *person) {
 void modifyPersonData(Person *person) {
     int choice;
 
-    // Print available options for modification
     printf("Available options for modification:\n");
     printf("1. Modify ID\n");
     printf("2. Modify Key-Value Pair\n");
@@ -193,13 +211,11 @@ void modifyPersonData(Person *person) {
 
     switch (choice) {
         case 1:
-            // Modify ID
             printf("Enter new ID: ");
             scanf("%d", &person->id);
             break;
 
         case 2:
-            // Modify Key-Value Pair
             if (person->data == NULL) {
                 printf("No data available for modification.\n");
                 break;
@@ -234,15 +250,18 @@ void modifyPersonData(Person *person) {
 
 // Function to save modified data back to a file
 void saveData(const char *filename, Person *people, int num_people) {
+    // Creating JSON Strucure
     cJSON *new_json = cJSON_CreateObject();
     cJSON *new_people_array = cJSON_CreateArray();
 
+    // Creating Person Objects
     for (int i = 0; i < num_people; ++i) {
         cJSON *person_json = cJSON_CreateObject();
 
         // Add ID to the person's JSON object
         cJSON_AddNumberToObject(person_json, "id", people[i].id);
 
+        // Parsing Values
         KeyValue *key_value = people[i].data;
         while (key_value != NULL) {
             cJSON *value_item;
@@ -274,6 +293,7 @@ void saveData(const char *filename, Person *people, int num_people) {
 
     char *json_string = cJSON_Print(new_json);
 
+    // Saving to File
     FILE *output_file = fopen(filename, "w");
     if (output_file == NULL) {
         fprintf(stderr, "Error when trying to open file for writing.\n");
@@ -282,7 +302,6 @@ void saveData(const char *filename, Person *people, int num_people) {
         return;
     }
 
-    // Print the JSON string to the console for debugging
     printf("JSON String:\n%s\n", json_string);
 
     // Attempt to write to the file
@@ -301,7 +320,7 @@ void saveData(const char *filename, Person *people, int num_people) {
 // Function to free memory allocated for Person array
 void freePeople(Person *people, int num_people) {
     if (people == NULL) {
-        return; // Nothing to free
+        return; 
     }
 
     for (int i = 0; i < num_people; ++i) {
@@ -317,12 +336,9 @@ void modifyDataBasedOnID(Person *people, int num_people) {
     do {
         printf("Enter the ID of the person to modify (or enter 0 to return to the main menu): ");
         scanf("%d", &personID);
-
-        // Consume the newline character left in the input buffer
         getchar();
 
         if (personID == 0) {
-            // Return to main menu
             return;
         }
 
@@ -340,7 +356,7 @@ void modifyDataBasedOnID(Person *people, int num_people) {
         } else {
             printf("Person with ID %d not found.\n", personID);
         }
-    } while (personID != 0);  // Continue until user chooses to return to main menu
+    } while (personID != 0); 
 }
 
 // Function to delete a person based on their ID
@@ -449,10 +465,11 @@ int main() {
 
     } while (choice != 7);
 
-    // Free dynamically allocated memory before next iteration
-    freePeople(people, num_people);
-    people = NULL;
-    num_people = 0;
+    // Free the allocated memory for the 'people' array
+    for (int i = 0; i < num_people; ++i) {
+        free(people[i].data);
+    }
+    free(people);
     return 0;
 }
 
