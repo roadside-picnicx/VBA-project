@@ -381,11 +381,9 @@ void deletePersonByID(Person *people, int *num_people, int id) {
 int main() {
     int num_people = 0;
     Person *people = NULL;
-
-    int choice;
     char file_name[100];
+    int choice;
 
-    // Menu loop
     do {
         // Print menu options
         printf("Menu Options:\n");
@@ -396,9 +394,9 @@ int main() {
         printf("5. Create new data\n");
         printf("6. Save data to file\n");
         printf("7. Exit\n");
-
-        // Get user choice
         printf("Enter your choice: ");
+        
+        // Get user choice
         scanf("%d", &choice);
 
         // Consume the newline character left in the input buffer
@@ -407,11 +405,10 @@ int main() {
         switch (choice) {
             case 1:
                 printf("Choose file to load: ");
-                scanf("%s", file_name);
-
+                scanf("%99s", file_name);
                 // Load data from a file
                 people = loadData(file_name, &num_people);
-                if (people == NULL) {
+                if (!people) {
                     printf("Loading data failed\n");
                     return 1;
                 } else {
