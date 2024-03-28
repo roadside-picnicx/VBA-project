@@ -19,17 +19,19 @@ typedef struct {
 // Add a new key-value pair to the linked list
 int addKeyValue(KeyValue **list, const char *key, const char *value) {
     // Allocate memory for a new KeyValue node
-    KeyValue *newNode = (KeyValue *)malloc(sizeof(KeyValue));
-    if (newNode == NULL) {
-        fprintf(stderr, "Memory allocation failed for new KeyValue node.\n");
+    KeyValue *newNode = malloc(sizeof(KeyValue));
+    if (!newNode) {
+        perror("Memory allocation failed for new KeyValue node");
         return 0;
     }
 
     // Allocate memory for the key and value strings
     newNode->key = strdup(key);
     newNode->value = strdup(value);
-    if (newNode->key == NULL || newNode->value == NULL) {
-        fprintf(stderr, "Memory allocation failed for key or value string.\n");
+    if (!newNode->key || !newNode->value) {
+        perror("Memory allocation failed for key or value string");
+        free(newNode->key);
+        free(newNode->value);
         free(newNode);
         return 0;
     }
@@ -42,7 +44,7 @@ int addKeyValue(KeyValue **list, const char *key, const char *value) {
 
 // Release memory allocated for the linked list
 void freeKeyValueList(KeyValue *list) {
-    while (list != NULL) {
+    while (list) {
         KeyValue *temp = list;
         list = list->next;
         free(temp->key);
@@ -55,7 +57,7 @@ void freeKeyValueList(KeyValue *list) {
 Person *loadData(const char *filename, int *num_people) {
     // File Opening and Reading
     FILE *file = fopen(filename, "r");
-    if (file == NULL) {
+    if (!file) {
         fprintf(stderr, "Error occurred when trying to open file '%s'.\n", filename);
         return NULL;
     }
@@ -64,7 +66,13 @@ Person *loadData(const char *filename, int *num_people) {
     long file_size = ftell(file);
     rewind(file);
 
-    char *file_content = (char *)malloc(file_size + 1);
+    char *file_content = malloc(file_size + 1);
+    if (!file_content) {
+        perror("Memory allocation failed for file content");
+        fclose(file);
+        return NULL;
+    }
+
     fread(file_content, 1, file_size, file);
     fclose(file);
 
@@ -76,9 +84,9 @@ Person *loadData(const char *filename, int *num_people) {
     cJSON *json = cJSON_Parse(file_content);
     free(file_content);
 
-    if (json == NULL) {
+    if (!json) {
         const char *error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL) {
+        if (error_ptr) {
             fprintf(stderr, "Error before: %s\n", error_ptr);
         }
         fprintf(stderr, "Error when parsing JSON.\n");
@@ -87,7 +95,7 @@ Person *loadData(const char *filename, int *num_people) {
 
     // JSON Data Extraction
     cJSON *people_array = cJSON_GetObjectItem(json, "people");
-    if (people_array == NULL || !cJSON_IsArray(people_array)) {
+    if (!people_array || !cJSON_IsArray(people_array)) {
         fprintf(stderr, "Invalid or missing 'people' array in JSON.\n");
         cJSON_Delete(json);
         return NULL;
@@ -96,9 +104,9 @@ Person *loadData(const char *filename, int *num_people) {
     *num_people = cJSON_GetArraySize(people_array);
 
     // Memory Allocation
-    Person *people = (Person *)malloc((*num_people) * sizeof(Person));
+    Person *people = malloc((*num_people) * sizeof(Person));
 
-    if (people == NULL) {
+    if (!people) {
         fprintf(stderr, "Memory allocation failed.\n");
         cJSON_Delete(json);
         return NULL;
@@ -140,7 +148,7 @@ void addNewData(Person **people, int *num_people) {
     // Iterate through existing people to find unique keys
     for (int i = 0; i < *num_people; ++i) {
         KeyValue *current = (*people)[i].data;
-        while (current != NULL) {
+        while (current) {
             // Check if the key is already present in the keys array
             int found = 0;
             for (int j = 0; j < num_keys; ++j) {
@@ -152,7 +160,7 @@ void addNewData(Person **people, int *num_people) {
             // If the key is not already present, add it to the keys array
             if (!found) {
                 num_keys++;
-                keys = (char **)realloc(keys, num_keys * sizeof(char *));
+                keys = realloc(keys, num_keys * sizeof(char *));
                 keys[num_keys - 1] = strdup(current->key);
             }
             current = current->next;
@@ -161,7 +169,7 @@ void addNewData(Person **people, int *num_people) {
 
     // Create a new person object
     Person new_person;
-    new_person.id = (*num_people) + 1;
+    new_person.id = *num_people + 1;
     new_person.data = NULL;
 
     // Prompt the user for values
@@ -174,7 +182,7 @@ void addNewData(Person **people, int *num_people) {
 
     // Add the new person object to the existing people array
     *num_people += 1;
-    *people = (Person *)realloc(*people, (*num_people) * sizeof(Person));
+    *people = realloc(*people, *num_people * sizeof(Person));
     (*people)[*num_people - 1] = new_person;
 
     // Free the memory allocated for keys
@@ -187,11 +195,10 @@ void addNewData(Person **people, int *num_people) {
 
 // Print data of specific person
 void printPersonData(const Person *person) {
-    printf("Person ID: %d\n", person->id);
-    printf("Data:\n");
+    printf("Person ID: %d\nData:\n", person->id);
 
-    KeyValue *key_value = person->data;
-    while (key_value != NULL) {
+    const KeyValue *key_value = person->data;
+    while (key_value) {
         printf("  %s: %s\n", key_value->key, key_value->value);
         key_value = key_value->next;
     }
@@ -216,24 +223,24 @@ void modifyPersonData(Person *person) {
             break;
 
         case 2:
-            if (person->data == NULL) {
+            if (!person->data) {
                 printf("No data available for modification.\n");
                 break;
             }
 
             char key[100], value[100];
             printf("Enter key to modify: ");
-            scanf("%s", key);
+            scanf("%99s", key);
             printf("Enter new value: ");
-            scanf("%s", value);
+            scanf("%99s", value);
 
             // Find the key in the linked list and modify its value
             KeyValue *key_value = person->data;
-            while (key_value != NULL && strcmp(key_value->key, key) != 0) {
+            while (key_value && strcmp(key_value->key, key) != 0) {
                 key_value = key_value->next;
             }
 
-            if (key_value != NULL) {
+            if (key_value) {
                 // Update the linked list node with the new value
                 free(key_value->value);
                 key_value->value = strdup(value);
@@ -263,7 +270,7 @@ void saveData(const char *filename, Person *people, int num_people) {
 
         // Parsing Values
         KeyValue *key_value = people[i].data;
-        while (key_value != NULL) {
+        while (key_value) {
             cJSON *value_item;
 
             // Check if the value is numeric or a string
@@ -319,9 +326,7 @@ void saveData(const char *filename, Person *people, int num_people) {
 
 // Function to free memory allocated for Person array
 void freePeople(Person *people, int num_people) {
-    if (people == NULL) {
-        return; 
-    }
+    if (!people) return;
 
     for (int i = 0; i < num_people; ++i) {
         freeKeyValueList(people[i].data);
@@ -342,21 +347,15 @@ void modifyDataBasedOnID(Person *people, int num_people) {
             return;
         }
 
-        // Find the person with the specified ID
-        Person *targetPerson = NULL;
         for (int i = 0; i < num_people; ++i) {
             if (people[i].id == personID) {
-                targetPerson = &people[i];
-                break;
+                modifyPersonData(&people[i]);
+                return;
             }
         }
 
-        if (targetPerson != NULL) {
-            modifyPersonData(targetPerson);
-        } else {
-            printf("Person with ID %d not found.\n", personID);
-        }
-    } while (personID != 0); 
+        printf("Person with ID %d not found.\n", personID);
+    } while (1);
 }
 
 // Function to delete a person based on their ID
