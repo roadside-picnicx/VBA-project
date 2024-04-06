@@ -276,16 +276,17 @@ void saveData(const char *filename, Person *people, int num_people) {
             // Check if the value is numeric or a string
             double numeric_value;
             if (sscanf(key_value->value, "%lf", &numeric_value) == 1) {
-                // If it's numeric, use cJSON_CreateNumber
                 value_item = cJSON_CreateNumber(numeric_value);
             } else {
-                // If it's not numeric, manually remove extra quotes
-                size_t len = strlen(key_value->value);
-                if (key_value->value[0] == '\"' && key_value->value[len - 1] == '\"') {
-                    key_value->value[len - 1] = '\0';
-                    value_item = cJSON_CreateString(key_value->value + 1);
+                char *value = key_value->value;
+                size_t len = strlen(value);
+                if (value[0] == '\"' && value[len - 1] == '\"') {
+                    value[len - 1] = '\0';
+                    value_item = cJSON_CreateString(value + 1);
+                } else if (value[0] == '\"') {
+                    value_item = cJSON_CreateString(value + 1); 
                 } else {
-                    value_item = cJSON_CreateString(key_value->value);
+                    value_item = cJSON_CreateString(value);
                 }
             }
 
@@ -323,6 +324,7 @@ void saveData(const char *filename, Person *people, int num_people) {
     cJSON_Delete(new_json);
     free(json_string);
 }
+
 
 // Function to free memory allocated for Person array
 void freePeople(Person *people, int num_people) {
