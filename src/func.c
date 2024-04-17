@@ -1,11 +1,8 @@
-#include "main.h" 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "../cJSON/cJSON.h"
 
-<<<<<<< HEAD:src/func.c
 // Structure to represent dynamic key-value pairs
 typedef struct KeyValue {
     char *key;
@@ -18,9 +15,6 @@ typedef struct {
     int id;         
     KeyValue *data;  
 } Person;
-
-
-
 
 // Add a new key-value pair to the linked list
 int addKeyValue(KeyValue **list, const char *key, const char *value) {
