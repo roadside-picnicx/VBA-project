@@ -43,6 +43,7 @@ int addKeyValue(KeyValue **list, const char *key, const char *value) {
 }
 
 // Release memory allocated for the linked list
+// TODO Modify function to properly release memory
 void freeKeyValueList(KeyValue *list) {
     while (list) {
         KeyValue *temp = list;
