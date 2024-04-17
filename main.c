@@ -29,7 +29,7 @@ int addKeyValue(KeyValue **list, const char *key, const char *value) {
     }
 
     // Allocate memory for the key and value strings
-    newNode->key = strdup(key);
+    newNode->key = strdup(key);                 // strdup = duplicates a string
     newNode->value = strdup(value);
     if (!newNode->key || !newNode->value) {
         perror("Memory allocation failed for key or value string");
@@ -65,9 +65,9 @@ Person *loadData(const char *filename, int *num_people) {
         return NULL;
     }
 
-    fseek(file, 0, SEEK_END);
-    long file_size = ftell(file);
-    rewind(file);
+    fseek(file, 0, SEEK_END); // Move pointer to end
+    long file_size = ftell(file); // get file size
+    rewind(file); // move pointer to beginning
 
     char *file_content = malloc(file_size + 1);
     if (!file_content) {
@@ -76,16 +76,16 @@ Person *loadData(const char *filename, int *num_people) {
         return NULL;
     }
 
-    fread(file_content, 1, file_size, file);
+    fread(file_content, 1, file_size, file); // read content to memory
     fclose(file);
 
-    file_content[file_size] = '\0';
+    file_content[file_size] = '\0'; // add null terminator
 
     printf("File content: %s\n", file_content);
 
     // JSON Parsing
-    cJSON *json = cJSON_Parse(file_content);
-    free(file_content);
+    cJSON *json = cJSON_Parse(file_content); // parse json content
+    free(file_content); // free memory for content
 
     if (!json) {
         const char *error_ptr = cJSON_GetErrorPtr();
@@ -97,17 +97,17 @@ Person *loadData(const char *filename, int *num_people) {
     }
 
     // JSON Data Extraction
-    cJSON *people_array = cJSON_GetObjectItem(json, "people");
+    cJSON *people_array = cJSON_GetObjectItem(json, "people"); // get people array
     if (!people_array || !cJSON_IsArray(people_array)) {
         fprintf(stderr, "Invalid or missing 'people' array in JSON.\n");
         cJSON_Delete(json);
         return NULL;
     }
 
-    *num_people = cJSON_GetArraySize(people_array);
+    *num_people = cJSON_GetArraySize(people_array); // get number of people in the array
 
     // Memory Allocation
-    Person *people = malloc((*num_people) * sizeof(Person));
+    Person *people = malloc((*num_people) * sizeof(Person)); // allocate memory for array of people
 
     if (!people) {
         fprintf(stderr, "Memory allocation failed.\n");
@@ -117,14 +117,14 @@ Person *loadData(const char *filename, int *num_people) {
 
     // Data Population
     for (int i = 0; i < *num_people; ++i) {
-        cJSON *person_json = cJSON_GetArrayItem(people_array, i);
+        cJSON *person_json = cJSON_GetArrayItem(people_array, i); // get json object for each person
 
         // Initialize a linked list for key-value pairs
         people[i].data = NULL;
 
         // Set the person's identifier (id)
         cJSON *id_item = cJSON_GetObjectItem(person_json, "id");
-        people[i].id = (id_item != NULL && cJSON_IsNumber(id_item)) ? id_item->valueint : -1;
+        people[i].id = (id_item != NULL && cJSON_IsNumber(id_item)) ? id_item->valueint : -1; //set person id
 
         // Iterate through all items in the person's JSON object
         cJSON *item = NULL;
