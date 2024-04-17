@@ -2,8 +2,6 @@
 #include <CUnit/Basic.h>
 #include "main.h" 
 
-
-
 // Test suite initialization function
 int init_suite(void) {
     return 0;
@@ -38,7 +36,7 @@ void test_addKeyValue(void) {
     CU_ASSERT_EQUAL(addKeyValue(&list, "key3", NULL), 0);
 }
 
-// Main function that runs the test cases
+// Main function that runs the tests
 int main() {
     CU_initialize_registry();
 
@@ -49,9 +47,9 @@ int main() {
     // Run all tests using the basic interface
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
-
-    // Cleanup
     CU_cleanup_registry();
 
     return CU_get_error();
+
+
 }
