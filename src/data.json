@@ -5,6 +5,7 @@
 			"age":	30,
 			"hobby":	"programming",
 			"salary":	60000.75,
-			"job":	"Programmer"
+			"job":	"Programmer",
+			"address":	"Znojmo"
 		}]
 }
