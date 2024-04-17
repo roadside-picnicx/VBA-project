@@ -14,6 +14,12 @@ gcc -o VBA_projekt main.c cJSON/cJSON.o
 gcc -o test_person tests/testing.c main.c cJSON/cJSON.o -lcunit
 ```
 
+To compile on Windows 11, specifically with VS Code, add this line into "args" in tasks.json:
+```bash
+"${workspaceFolder}\\cJSON\\cJSON.c",
+```
+It instructs the compiler to include cJSON.c file in the compilation process, ensuring that the library is compiled and linked with your project.
+
 ## Structures
 These two structures were created to facilitate efficient data organization and management within the scope of this project.
 
