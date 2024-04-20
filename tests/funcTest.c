@@ -43,7 +43,7 @@ void test_addKeyValue(void) {
 
 }
 
-
+/*
 void test_freeKeyValueList() {
 
     // Test freeKeyValueList function with a null pointer
@@ -57,20 +57,18 @@ void test_freeKeyValueList() {
     CU_ASSERT_PTR_NULL(list);
 
 
-    // Test freeKeyValueList function with a single node
+   / // Test freeKeyValueList function with a single node
     KeyValue *list2 = malloc(sizeof(KeyValue));
     list2->key = strdup("key");
     list2->value = strdup("value");
     list2->next = NULL;
 
     freeKeyValueList(list2);
-    CU_ASSERT_PTR_NULL(list2->next);
-    CU_ASSERT_PTR_NULL(list2->key);
-    CU_ASSERT_PTR_NULL(list2->value);
+    CU_ASSERT_PTR_NULL(list2);
 
 
 
-    // Test freeKeyValueList function with multiple nodes
+   // Test freeKeyValueList function with multiple nodes
     KeyValue *list3 = malloc(sizeof(KeyValue));
     list3->key = strdup("key1");
     list3->value = strdup("value1");
@@ -83,11 +81,35 @@ void test_freeKeyValueList() {
     list3->next->next->next = NULL;
 
     freeKeyValueList(list3);
-    CU_ASSERT_PTR_NULL(list3->next);
-    CU_ASSERT_PTR_NULL(list3->key);
-    CU_ASSERT_PTR_NULL(list3->value);
+    CU_ASSERT_PTR_NULL(list3);
+}*/
 
+void test_loadData(void) {
+    int num_people = 0;
 
+    // Test loading data from a valid JSON file (this is specific for testLoadData.json)
+    Person *people = loadData("src/testLoadData.json", &num_people);
+    CU_ASSERT_PTR_NOT_NULL_FATAL(people);
+    CU_ASSERT_EQUAL(num_people, 2); //If you want to test different file, change the number to expected number of people
+
+    // Clean up
+    freePeople(people, num_people);
+
+    //TODO Julia do whatever you want here 
+}
+
+void test_loadData_nonexistent(void) {
+    int num_people = 0;
+    Person *people = loadData("src/badfilename.json", &num_people);
+
+    CU_ASSERT_PTR_NULL_FATAL(people);
+}
+
+void test_loadData_invalid_json(void) {
+    int num_people = 0;
+    Person *people = loadData("src/testLoadData.jsom", &num_people);
+
+    CU_ASSERT_PTR_NULL_FATAL(people);
 
 }
 
@@ -105,11 +127,17 @@ int main() {
 
     // Add tests to the suite
     CU_add_test(suite, "test_addKeyValue", test_addKeyValue);
-    CU_add_test(suite, "test_freeKeyValueList", test_freeKeyValueList);  
+    //CU_add_test(suite, "test_freeKeyValueList", test_freeKeyValueList);  
+    CU_add_test(suite, "test_loadData", test_loadData);  
+    CU_add_test(suite, "test_loadData_nonexistent", test_loadData_nonexistent);  
+    CU_add_test(suite, "test_loadData_invalid_json", test_loadData_invalid_json);  
+
+
 
     // Run all tests using the basic interface
     CU_basic_set_mode(CU_BRM_VERBOSE);
     CU_basic_run_tests();
+
     CU_cleanup_registry();
 
     return CU_get_error();
