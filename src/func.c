@@ -53,7 +53,7 @@ void freeKeyValueList(KeyValue **list) {
         free(temp->value);
         free(temp);
     }
-    //*list = NULL;
+    *list = NULL;
 }
 
 
