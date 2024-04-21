@@ -67,7 +67,11 @@ void test_freeKeyValueList() {
     list2->next = NULL;
 
     freeKeyValueList(&list2);
+<<<<<<< HEAD
     CU_ASSERT_PTR_NULL(list2);
+=======
+    CU_ASSERT_PTR_NULL(list2); 
+>>>>>>> 1c4a658 (Fixed git problem)
 
     // Test freeKeyValueList function with multiple nodes
     KeyValue *list3 = malloc(sizeof(KeyValue));
@@ -157,6 +161,7 @@ void test_printPersonData() {
     addKeyValue(&(person.data), "Age", "30");
     addKeyValue(&(person.data), "City", "New York");
 
+<<<<<<< HEAD
     freopen("test_printPersonData.txt", "w", stdout);
     // printPersonData(&person);
     // fclose(stdout);
@@ -230,6 +235,8 @@ void test_ModifyDataBasedOnID() {
         freeKeyValueList(&(people[i].data));
     }
     free(people);
+=======
+>>>>>>> 1c4a658 (Fixed git problem)
 }
 
 
