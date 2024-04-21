@@ -6,7 +6,6 @@ This is a simple C project that utilizes cJSON library to read and write JSON da
 Create a program that will read a text file in JSON format. It stores the data in dynamically allocated variables in memory. It will also allow you to save the data in memory to a JSON text file.
 
 ## Compile
-
 To compile the project, use the following command:
 
 ```bash
@@ -14,11 +13,28 @@ gcc -o VBA_projekt main.c cJSON/cJSON.o
 gcc -o test_person tests/testing.c main.c cJSON/cJSON.o -lcunit
 ```
 
-To compile on Windows 11, specifically with VS Code, add this line into "args" in tasks.json:
+To compile on Windows 11, specifically with VS Code:
 ```bash
-"${workspaceFolder}\\cJSON\\cJSON.c",
+gcc -o main.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c  
+gcc -o test.exe .\tests\funcTest.c .\src\func.c .\cJSON\cJSON.c -lcunit
 ```
-It instructs the compiler to include cJSON.c file in the compilation process, ensuring that the library is compiled and linked with your project.
+
+## Gcov
+To check code coverage using gcov on Windows 11, you need to add following flags while compiling to generate .gcno files:
+```bash
+gcc -o main.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c -fprofile-arcs -ftest-coverage 
+gcc -o test.exe .\tests\funcTest.c .\src\func.c .\cJSON\cJSON.c -lcunit -fprofile-arcs -ftest-coverage
+```
+
+Then you need to run your executables, that will generate .gcda files.
+
+To generate .gcov files, simply run gcov command with the source file and previously generated .gcno and .gcda files:
+```bash
+gcov .\src\main.c .\main-main.gcda .\main-main.gcno
+gcov .\tests\funcTest.c .\test-funcTest.gcno .\test-funcTest.gcda
+```
+
+After this, you should have successfully generated your .gcov files. By analyzing aspects of the .gcov files, you can gain valuable insights into the effectiveness of your test suite and identify areas of your code that may require further testing or optimization.
 
 ## Structures
 These two structures were created to facilitate efficient data organization and management within the scope of this project.
