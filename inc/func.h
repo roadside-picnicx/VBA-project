@@ -15,7 +15,7 @@ typedef struct {
 } Person;
 
 int addKeyValue(KeyValue **list, const char *key, const char *value);
-void freeKeyValueList(KeyValue *list);
+void freeKeyValueList(KeyValue **list);
 Person *loadData(const char *filename, int *num_people);
 void addNewData(Person **people, int *num_people);
 void printPersonData(const Person *person);

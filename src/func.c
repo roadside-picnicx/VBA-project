@@ -44,15 +44,18 @@ int addKeyValue(KeyValue **list, const char *key, const char *value) {
 
 // Release memory allocated for the linked list
 // TODO Modify function to properly release memory
-void freeKeyValueList(KeyValue *list) {
-    while (list) {
-        KeyValue *temp = list;
-        list = list->next;
+void freeKeyValueList(KeyValue **list) {
+    if (!list || !*list) return;
+    while (*list) {
+        KeyValue *temp = *list;
+        *list = (*list)->next;
         free(temp->key);
         free(temp->value);
         free(temp);
     }
+    //*list = NULL;
 }
+
 
 // Function to load data from a file and parse it into memory
 Person *loadData(const char *filename, int *num_people) {
@@ -335,7 +338,7 @@ void freePeople(Person *people, int num_people) {
     if (!people) return;
 
     for (int i = 0; i < num_people; ++i) {
-        freeKeyValueList(people[i].data);
+        freeKeyValueList(&people[i].data);
     }
 
     free(people);
@@ -369,7 +372,7 @@ void deletePersonByID(Person *people, int *num_people, int id) {
     for (int i = 0; i < *num_people; ++i) {
         if (people[i].id == id) {
             // Free the key-value pairs associated with the person
-            freeKeyValueList(people[i].data);
+            freeKeyValueList(&people[i].data);
 
             // Move the last person in the array to the position of the deleted person
             people[i] = people[*num_people - 1];

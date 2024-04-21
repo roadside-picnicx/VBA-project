@@ -1,11 +1,19 @@
 {
 	"people":	[{
 			"id":	1,
-			"name":	"Jane Doe",
-			"age":	30,
-			"hobby":	"programming",
-			"salary":	60000.75,
+			"address":	"Znojmo",
 			"job":	"Programmer",
-			"address":	"Znojmo"
+			"salary":	60000.75,
+			"hobby":	"programming",
+			"age":	30,
+			"name":	"Jane Doe"
+		}, {
+			"id":	2,
+			"name":	"MATUS",
+			"age":	33,
+			"hobby":	"nic",
+			"salary":	343434,
+			"job":	"popelar",
+			"address":	"znojmo"
 		}]
 }
