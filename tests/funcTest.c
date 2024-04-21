@@ -150,6 +150,7 @@ void test_addNewData() {
 
 void test_printPersonData() {
       
+    // Initialize test data
     Person person;
     person.id = 1;
     person.data = (KeyValue *)malloc(sizeof(KeyValue));
@@ -197,6 +198,7 @@ void test_printPersonData() {
 
 
 void test_modifyDataBasedOnID() {
+    // Initialize test data
     int num_people = 4;
     Person *people = malloc(num_people * sizeof(Person));
     if (people == NULL) {
@@ -210,7 +212,6 @@ void test_modifyDataBasedOnID() {
         addKeyValue(&(people[i].data), "Age", "30");
         addKeyValue(&(people[i].data), "City", "Brno");
     }
-
 
     provideInput("1\n2\nName\nJane\n");
     modifyDataBasedOnID(people, num_people);
@@ -265,25 +266,25 @@ void test_saveData() {
     // Call the function
     saveData(filename, people, num_people);
 
-    // Open the generated file and read its content
+    // Open the temp file
     FILE *fp = fopen(filename, "r");
     if (fp == NULL) {
         CU_FAIL("Failed to open test output file");
         return;
     }
 
-    // Read the content of the file
+    // Read the content of temp file
     fseek(fp, 0, SEEK_END);
     long file_size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     char *buffer = (char *)malloc((file_size + 1) * sizeof(char));
     fread(buffer, 1, file_size, fp);
-    buffer[file_size] = '\0'; // Null-terminate the string
+    buffer[file_size] = '\0';
 
-    // Close the file
+    // Close temp file
     fclose(fp);
 
-    // Read the content of the expected JSON file
+    // Read test_saveData.json
     const char *expected_filename = "test_saveData.json"; // File containing the expected JSON
     fp = fopen(expected_filename, "r");
     if (fp == NULL) {
@@ -291,19 +292,18 @@ void test_saveData() {
         free(buffer);
         return;
     }
-
-    // Read the content of the expected JSON file
+    
     fseek(fp, 0, SEEK_END);
     long expected_file_size = ftell(fp);
     fseek(fp, 0, SEEK_SET);
     char *expected_buffer = (char *)malloc((expected_file_size + 1) * sizeof(char));
     fread(expected_buffer, 1, expected_file_size, fp);
-    expected_buffer[expected_file_size] = '\0'; // Null-terminate the string
+    expected_buffer[expected_file_size] = '\0';
 
-    // Close the expected JSON file
+    // Close the test_saveData.json
     fclose(fp);
 
-    // Compare the content of the generated file with the content of the expected JSON file
+    // Compare the generated file with expected (test_saveData.json)
     printf("Buffer:\n%s\n", buffer);
     printf("Expected JSON:\n%s\n", expected_buffer);
     CU_ASSERT_STRING_EQUAL(buffer, expected_buffer);
@@ -311,6 +311,61 @@ void test_saveData() {
     // Clean up
     free(buffer);
     free(expected_buffer);
+}
+
+
+void test_freePeople() {
+    int num_people = 0;
+
+    // Initialize test data
+    Person *people = loadData("testLoadData.json", &num_people);
+    if (people == NULL) {
+        CU_FAIL("Memory allocation failed");
+        return;
+    }
+
+    // Call the function
+    freePeople(people, num_people);
+
+    // Run assertions
+    CU_ASSERT_PTR_NULL(people);
+    CU_ASSERT_PTR_NOT_NULL(people);
+}
+
+
+void test_deletePersonByID() {
+    // Prepare test data
+    int num_people = 3;
+    Person *people = (Person *)malloc(num_people * sizeof(Person));
+    if (people == NULL) {
+        CU_FAIL("Memory allocation failed");
+        return;
+    }
+
+    // Initialize test data
+    for (int i = 0; i < num_people; ++i) {
+        people[i].id = i + 1;
+        people[i].data = NULL; // Add your test data here
+    }
+
+    // Call the function to delete a person with ID 2
+    int id_to_delete = 2;
+    deletePersonByID(people, &num_people, id_to_delete);
+
+    // Person with ID 2 is deleted
+    int found = 0;
+    for (int i = 0; i < num_people; ++i) {
+        if (people[i].id == id_to_delete) {
+            found = 1;
+            break;
+        }
+    }
+    CU_ASSERT_EQUAL(found, 0);
+    // There are two people left
+    CU_ASSERT_EQUAL(num_people, 2);
+
+    // Clean up
+    free(people);
 }
 
 
@@ -333,7 +388,8 @@ int main() {
     // CU_add_test(suite, "test_printPersonData", test_printPersonData); // Not working correctly
     CU_add_test(suite, "test_modifyDataBasedOnID", test_modifyDataBasedOnID);
     CU_add_test(suite, "test_saveData", test_saveData); 
-
+    CU_add_test(suite, "test_freePeople", test_freePeople); // Failing, not sure if can be tested by unit test
+    CU_add_test(suite, "test_deletePersonByID", test_deletePersonByID);
 
     // Run all tests using the basic interface
     CU_basic_set_mode(CU_BRM_VERBOSE);
