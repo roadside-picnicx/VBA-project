@@ -149,45 +149,55 @@ void test_addNewData() {
 
 
 void test_printPersonData() {
+      
     Person person;
     person.id = 1;
-    person.data = NULL;
+    person.data = (KeyValue *)malloc(sizeof(KeyValue));
+    person.data->key = strdup("Name");
+    person.data->value = strdup("John");
+    person.data->next = (KeyValue *)malloc(sizeof(KeyValue));
+    person.data->next->key = strdup("Age");
+    person.data->next->value = strdup("25");
+    person.data->next->next = NULL;
+
+    FILE *output_file = freopen("test_printPersonData.txt", "w", stdout);
+    if (output_file == NULL) {
+        perror("Failed to redirect stdout");
+        return;
+    }
+    printPersonData(&person);
+    fflush(stdout);
+    fclose(output_file);
+    freopen("/dev/tty", "w", stdout);
+
+    FILE *fp = fopen("./test_printPersonData.txt", "r");
+    if (fp == NULL) {
+        CU_FAIL("Failed to open test output file");
+        return;
+    }
     
-    addKeyValue(&(person.data), "Name", "John");
-    addKeyValue(&(person.data), "Age", "30");
-    addKeyValue(&(person.data), "City", "New York");
+    char buffer[100];
 
-    freopen("test_printPersonData.txt", "w", stdout);
-    // printPersonData(&person);
-    // fclose(stdout);
+    // Check the expected output
+    CU_ASSERT_PTR_NOT_NULL(fgets(buffer, sizeof(buffer), fp));
+    CU_ASSERT_STRING_EQUAL(buffer, "Person ID: 1\n");
 
-    // FILE *fp = fopen("test_printPersonData.txt", "r");
-    // if (fp == NULL) {
-    //     CU_FAIL("Failed to open test_pritnPersonData.txt")
-    //     return;
-    // }
-    
-    // char buffer[100];
+    CU_ASSERT_PTR_NOT_NULL(fgets(buffer, sizeof(buffer), fp));
+    CU_ASSERT_STRING_EQUAL(buffer, "Data:\n");
 
-    // fgets(buffer, sizeof(buffer), fp);
-    // CU_ASSERT_STRING_EQUAL(buffer, "Name: John\n");
+    CU_ASSERT_PTR_NOT_NULL(fgets(buffer, sizeof(buffer), fp));
+    CU_ASSERT_STRING_EQUAL(buffer, "  Name: John\n");
 
-    // fgets(buffer, sizeof(buffer), fp);
-    // CU_ASSERT_STRING_EQUAL(buffer, "Age: 30\n");
+    CU_ASSERT_PTR_NOT_NULL(fgets(buffer, sizeof(buffer), fp));
+    CU_ASSERT_STRING_EQUAL(buffer, "  Age: 25\n");
 
-    // fgets(buffer, sizeof(buffer), fp);
-    // CU_ASSERT_STRING_EQUAL(buffer, "City: New York\n");
-
-    // fgets(buffer, sizeof(buffer), fp);
-    // CU_ASSERT_STRING_EQUAL(buffer, "\n");
-
-    // fclose(fp);
+    fclose(fp);
     
 }
 
 
 void test_modifyDataBasedOnID() {
-    int num_people = 3;
+    int num_people = 4;
     Person *people = malloc(num_people * sizeof(Person));
     if (people == NULL) {
         CU_FAIL("Memory allocation failed.");
@@ -211,25 +221,96 @@ void test_modifyDataBasedOnID() {
     provideInput("3\n2\nCity\nPraha\n");
     modifyDataBasedOnID(people, num_people);
 
-    
+    provideInput("4\n1\n5\n");
+    modifyDataBasedOnID(people, num_people);    
 
     CU_ASSERT_STRING_EQUAL(people[0].data->next->next->value, "Jane");
     CU_ASSERT_STRING_EQUAL(people[0].data->next->value, "30");
     CU_ASSERT_STRING_EQUAL(people[0].data->value, "Brno");
+    CU_ASSERT_EQUAL(people[0].id, 1);
 
     CU_ASSERT_STRING_EQUAL(people[1].data->next->next->value, "John");
     CU_ASSERT_STRING_EQUAL(people[1].data->next->value, "31");
     CU_ASSERT_STRING_EQUAL(people[1].data->value, "Brno");
+    CU_ASSERT_EQUAL(people[1].id, 2);
 
     CU_ASSERT_STRING_EQUAL(people[2].data->next->next->value, "John");
     CU_ASSERT_STRING_EQUAL(people[2].data->next->value, "30");
     CU_ASSERT_STRING_EQUAL(people[2].data->value, "Praha");
+    CU_ASSERT_EQUAL(people[2].id, 3);
+
+    CU_ASSERT_STRING_EQUAL(people[3].data->next->next->value, "John");
+    CU_ASSERT_STRING_EQUAL(people[3].data->next->value, "30");
+    CU_ASSERT_STRING_EQUAL(people[3].data->value, "Brno");
+    CU_ASSERT_EQUAL(people[3].id, 5);
 
 
     for (int i = 0; i < num_people; ++i) {
         freeKeyValueList(&(people[i].data));
     }
     free(people);
+}
+
+
+void test_saveData() {
+    // Prepare test data
+    const char *filename = "test_output.json"; // Temporary file name for testing
+    int num_people = 0;
+
+    // Initialize test data
+    Person *people = loadData("testLoadData.json", &num_people);
+    provideInput("2\n2\nname\nJames\n");
+    modifyDataBasedOnID(people, num_people);
+
+    // Call the function
+    saveData(filename, people, num_people);
+
+    // Open the generated file and read its content
+    FILE *fp = fopen(filename, "r");
+    if (fp == NULL) {
+        CU_FAIL("Failed to open test output file");
+        return;
+    }
+
+    // Read the content of the file
+    fseek(fp, 0, SEEK_END);
+    long file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    char *buffer = (char *)malloc((file_size + 1) * sizeof(char));
+    fread(buffer, 1, file_size, fp);
+    buffer[file_size] = '\0'; // Null-terminate the string
+
+    // Close the file
+    fclose(fp);
+
+    // Read the content of the expected JSON file
+    const char *expected_filename = "test_saveData.json"; // File containing the expected JSON
+    fp = fopen(expected_filename, "r");
+    if (fp == NULL) {
+        CU_FAIL("Failed to open expected output file");
+        free(buffer);
+        return;
+    }
+
+    // Read the content of the expected JSON file
+    fseek(fp, 0, SEEK_END);
+    long expected_file_size = ftell(fp);
+    fseek(fp, 0, SEEK_SET);
+    char *expected_buffer = (char *)malloc((expected_file_size + 1) * sizeof(char));
+    fread(expected_buffer, 1, expected_file_size, fp);
+    expected_buffer[expected_file_size] = '\0'; // Null-terminate the string
+
+    // Close the expected JSON file
+    fclose(fp);
+
+    // Compare the content of the generated file with the content of the expected JSON file
+    printf("Buffer:\n%s\n", buffer);
+    printf("Expected JSON:\n%s\n", expected_buffer);
+    CU_ASSERT_STRING_EQUAL(buffer, expected_buffer);
+
+    // Clean up
+    free(buffer);
+    free(expected_buffer);
 }
 
 
@@ -249,8 +330,10 @@ int main() {
     CU_add_test(suite, "test_freeKeyValueList", test_freeKeyValueList);  
     CU_add_test(suite, "test_loadData", test_loadData); 
     CU_add_test(suite, "test_addNewData", test_addNewData);
-    // CU_add_test(suite, "test_printPersonData", test_printPersonData);
-    CU_add_test(suite, "test_ModifyDataBasedOnID", test_modifyDataBasedOnID);
+    // CU_add_test(suite, "test_printPersonData", test_printPersonData); // Not working correctly
+    CU_add_test(suite, "test_modifyDataBasedOnID", test_modifyDataBasedOnID);
+    CU_add_test(suite, "test_saveData", test_saveData); 
+
 
     // Run all tests using the basic interface
     CU_basic_set_mode(CU_BRM_VERBOSE);

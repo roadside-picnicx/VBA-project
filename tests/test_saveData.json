@@ -1,0 +1,19 @@
+{
+	"people":	[{
+			"id":	1,
+			"address":	"Znojmo",
+			"job":	"Programmer",
+			"salary":	60000.75,
+			"hobby":	"programming",
+			"age":	30,
+			"name":	"Jane Doe"
+		}, {
+			"id":	2,
+			"address":	"Mojmirov",
+			"job":	"Chef",
+			"salary":	35000,
+			"hobby":	"making sandwitches",
+			"age":	35,
+			"name":	"James"
+		}]
+}

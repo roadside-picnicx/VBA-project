@@ -4,6 +4,7 @@ VBA_projekt
 *.out
 data.json
 tests/testLoadData.json
+tests/test_saveData.json
 tests/test_printPersonData.txt
 build.sh
 
