@@ -67,11 +67,7 @@ void test_freeKeyValueList() {
     list2->next = NULL;
 
     freeKeyValueList(&list2);
-<<<<<<< HEAD
     CU_ASSERT_PTR_NULL(list2);
-=======
-    CU_ASSERT_PTR_NULL(list2); 
->>>>>>> 1c4a658 (Fixed git problem)
 
     // Test freeKeyValueList function with multiple nodes
     KeyValue *list3 = malloc(sizeof(KeyValue));
@@ -161,7 +157,6 @@ void test_printPersonData() {
     addKeyValue(&(person.data), "Age", "30");
     addKeyValue(&(person.data), "City", "New York");
 
-<<<<<<< HEAD
     freopen("test_printPersonData.txt", "w", stdout);
     // printPersonData(&person);
     // fclose(stdout);
@@ -191,7 +186,7 @@ void test_printPersonData() {
 }
 
 
-void test_ModifyDataBasedOnID() {
+void test_modifyDataBasedOnID() {
     int num_people = 3;
     Person *people = malloc(num_people * sizeof(Person));
     if (people == NULL) {
@@ -235,8 +230,6 @@ void test_ModifyDataBasedOnID() {
         freeKeyValueList(&(people[i].data));
     }
     free(people);
-=======
->>>>>>> 1c4a658 (Fixed git problem)
 }
 
 
@@ -257,7 +250,7 @@ int main() {
     CU_add_test(suite, "test_loadData", test_loadData); 
     CU_add_test(suite, "test_addNewData", test_addNewData);
     // CU_add_test(suite, "test_printPersonData", test_printPersonData);
-    CU_add_test(suite, "test_ModifyDataBasedOnID", test_ModifyDataBasedOnID);
+    CU_add_test(suite, "test_ModifyDataBasedOnID", test_modifyDataBasedOnID);
 
     // Run all tests using the basic interface
     CU_basic_set_mode(CU_BRM_VERBOSE);

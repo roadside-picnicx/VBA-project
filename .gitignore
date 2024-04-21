@@ -3,9 +3,13 @@ VBA_projekt
 *.exe
 *.out
 data.json
+tests/testLoadData.json
+tests/test_printPersonData.txt
+build.sh
 
 # folders
 .vscode
+tests/testLoadData.json
 
 
 
