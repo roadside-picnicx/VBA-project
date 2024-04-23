@@ -26,7 +26,7 @@ gcc -o main.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c -fprofile-arcs -ftest-
 gcc -o test.exe .\tests\funcTest.c .\src\func.c .\cJSON\cJSON.c -lcunit -fprofile-arcs -ftest-coverage
 ```
 
-Then you need to run your executables, that will generate .gcda files.
+Then you need to run executables, that will generate .gcda files.
 
 To generate .gcov files, simply run gcov command with the source file and previously generated .gcno and .gcda files:
 ```bash
@@ -34,7 +34,15 @@ gcov .\src\main.c .\main-main.gcda .\main-main.gcno
 gcov .\tests\funcTest.c .\test-funcTest.gcno .\test-funcTest.gcda
 ```
 
-After this, you should have successfully generated your .gcov files. By analyzing aspects of the .gcov files, you can gain valuable insights into the effectiveness of your test suite and identify areas of your code that may require further testing or optimization.
+After this, you should have successfully generated .gcov files. By analyzing aspects of the .gcov files, you can gain valuable insights into the effectiveness of test suite and identify areas of code that may require further testing or optimization.
+
+## Gcov Viewer
+To check code coverage using gcov viewer, use the following commands:
+```bash
+gcc --coverage src/func.c tests/funcTest.c cJSON/cJSON.c -lcunit
+./a.out
+```
+After that press: CTRL + SHIFT + P and execute: Gcov Viewer:Show.
 
 ## Structures
 These two structures were created to facilitate efficient data organization and management within the scope of this project.
