@@ -1,2 +1,19 @@
+# files
 VBA_projekt
+*.exe
+*.out
+data.json
+tests/testLoadData.json
+tests/test_saveData.json
+tests/test_printPersonData.txt
+build.sh
+test_person
+src/data.json
+
+# folders
+.vscode
+tests/testLoadData.json
+
+
+
 
