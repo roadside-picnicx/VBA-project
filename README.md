@@ -6,17 +6,40 @@ This is a simple C project that utilizes cJSON library to read and write JSON da
 Create a program that will read a text file in JSON format. It stores the data in dynamically allocated variables in memory. It will also allow you to save the data in memory to a JSON text file.
 
 ## Compile
-To compile the project, use the following command:
+To compile the project, you can choose to use `make` command or manually compile the files.
+
+The `make` will create `VBA_projekt.exe` and `unitTests.exe` executables, so they can run on Windows and Linux. You can call from the root folder following commands:
+```bash
+# Compile only program
+make 
+make build
+# Compile only tests
+make build_tests
+# Compile both program and tests
+make build_all
+# Remove only VBA_projekt.exe
+make clean 
+# Remove only unitTests.exe
+make clean_tests
+# Remove VBA_projekt.exe and unitTests.exe
+make clean_all
+```
+
+To manually compile files use the following command:
 
 ```bash
-gcc -o VBA_projekt src/main.c src/func.c cJSON/cJSON.o
-gcc -o test_person tests/funcTest.c src/func.c cJSON/cJSON.o -lcunit
+# Make sure you are in root folder
+gcc -o <output_file> src/main.c src/func.c cJSON/cJSON.o
+# Command for compiling unit tests
+gcc -o <test_output_file> tests/funcTest.c src/func.c cJSON/cJSON.o -lcunit
 ```
 
 To compile on Windows 11, specifically with VS Code:
 ```bash
-gcc -o main.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c  
-gcc -o test.exe .\tests\funcTest.c .\src\func.c .\cJSON\cJSON.c -lcunit
+# Make sure you are in the root folder
+gcc -o <output_file>.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c  
+# Command for compiling unit tests
+gcc -o <test_output_file>.exe .\tests\funcTest.c .\src\func.c .\cJSON\cJSON.c -lcunit
 ```
 
 ## Gcov
@@ -48,12 +71,31 @@ After that press: CTRL + SHIFT + P and execute: Gcov Viewer:Show.
 These two structures were created to facilitate efficient data organization and management within the scope of this project.
 
 ### KeyValue Structure
+
+```c
+typedef struct KeyValue {
+    char *key;
+    char *value;
+    struct KeyValue *next;
+} KeyValue;
+```
+
 The KeyValue structure is designed to represent dynamic key-value pairs, commonly used for storing and accessing associated data in a flexible manner. It consists of the following components:
 * char *key: Represents the key associated with a particular value. It is a pointer to a character array.
 * char *value: Represents the corresponding value associated with the key. Similar to the key, it is also a pointer to a character array.
 * struct KeyValue *next: Points to the next KeyValue structure in a linked list, enabling the creation of chains of key-value pairs.
 
 ### Person Structure
+
+```c
+// Structure to represent a person
+typedef struct {
+    int id;         
+    KeyValue *data;  
+} Person;
+
+```
+
 The Person structure is intended to represent an individual and their associated data. It comprises the following elements:
 * int id: An identifier unique to each person.
 * KeyValue *data: A pointer to a linked list of key-value pairs, allowing for the storage of attributes associated with the person. 
@@ -62,6 +104,10 @@ The Person structure is intended to represent an individual and their associated
 These functions enable operations such as creation, modification, and retrieval of information associated with individuals (Person structure) and their corresponding attributes (KeyValue structure).
 
 ### addKeyValue
+```C 
+int addKeyValue(KeyValue **list, const char *key, const char *value);
+```
+
 This function adds a new key-value pair to a linked list. It takes in three parameters: a pointer to a pointer to the head of the linked list, a key, and a value.
 
 Process:
@@ -74,6 +120,11 @@ Process:
 * The function returns 1 to indicate successful addition of the key-value pair.
 
 ### freeKeyValueList
+
+```C 
+void freeKeyValueList(KeyValue **list);
+```
+
 This function releases memory allocated for a linked list of key-value pairs. It takes a pointer to the head of the linked list as its parameter.
 
 Process:
@@ -87,6 +138,11 @@ Process:
 * After all nodes have been freed, the function sets the list pointer to NULL to indicate that the list is empty.
 
 ### Person *loadData
+
+```C
+Person *loadData(const char *filename, int *num_people);
+```
+
 This function loads data from a file, parses it into memory, and returns an array of Person structures containing the parsed data. It takes two parameters: the filename to load and a pointer to an integer to store the number of people loaded from the file.
 
 Process:
@@ -120,6 +176,11 @@ Process:
     * Returns the populated array of Person structures.
 
 ### addNewData
+
+```C
+void addNewData(Person **people, int *num_people);
+```
+
 This function allows for the addition of new data to the memory based on the keys present in the loaded data. It takes two parameters: a pointer to an array of Person structures and a pointer to an integer representing the number of people in the array.
 
 Process:
@@ -144,6 +205,11 @@ Process:
     * Frees the memory allocated for the keys array and its elements.
 
 ### printPersonData
+
+```C
+void printPersonData(const Person *person);
+```
+
 This function prints the data associated with a specific person. It takes a pointer to a Person structure as its parameter.
 
 Process:
@@ -152,6 +218,11 @@ Process:
 * Prints each key-value pair, where the key represents an attribute and the value represents the corresponding value.
 
 ### modifyPersonData
+
+```C
+void modifyPersonData(Person *person);
+```
+
 This function enables the modification of data associated with a specific person. It takes a pointer to a Person structure as its parameter.
 
 Process:
@@ -171,6 +242,11 @@ Process:
     * If the user enters an invalid choice, notifies the user.
 
 ### saveData
+
+```C
+void saveData(const char *filename, Person *people, int num_people);
+```
+
 This function saves modified data back to a file in JSON format. It takes three parameters:
 * const char *filename: A string representing the filename to which the data will be saved.
 * Person *people: A pointer to an array of Person structures containing the modified data.
@@ -197,6 +273,11 @@ Process:
     * Deletes the cJSON object and frees the memory allocated for the JSON string.
 
 ### freePeople
+
+```C
+void freePeople(Person *people, int num_people);
+```
+
 This function is responsible for releasing the memory allocated for an array of Person structures. It takes two parameters:
 * Person *people: A pointer to the array of Person structures.
 * int num_people: An integer representing the number of Person structures in the array.
@@ -211,6 +292,11 @@ Process:
     * Frees the memory allocated for the array of Person structures.
 
 ### modifyDataBasedOnID
+
+```C
+void modifyDataBasedOnID(Person *people, int num_people);
+```
+
 This function allows for the modification of data associated with a person based on their ID. It takes two parameters:
 * Person *people: A pointer to an array of Person structures containing the data.
 * int num_people: An integer representing the number of people in the people array.
@@ -228,6 +314,11 @@ Process:
     * Continues looping until the user chooses to return to the main menu by entering 0.
 
 ### deletePersonByID
+
+```C
+void deletePersonByID(Person *people, int *num_people, int id);
+```
+
 This function deletes a person from the dataset based on their ID. It takes three parameters:
 * Person *people: A pointer to an array of Person structures containing the dataset.
 * int *num_people: A pointer to an integer representing the number of people in the dataset.
@@ -244,3 +335,18 @@ Process:
         * Returns from the function.
 2. Handling Not Found:
     * If the person with the specified ID is not found in the dataset, prints a message indicating that the person was not found.
+
+
+## Tests
+
+With one exeption, a unit test is written for all functions in the project. These tests need to be run from the root folder of project `vba_projekt`. They can be build and run using following commands:
+
+```bash
+# Make sure you are in the root folder of project
+cd vba_projekt
+# Building tests 
+gcc -o <test_output_file> src/func.c tests/funcTest.c cJSON/cJSON.c -lcunit
+# Running tests
+./<test_output_file>
+```
+
