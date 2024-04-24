@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "cJSON/cJSON.h"
+#include "../cJSON/cJSON.h"
 
 // Structure to represent dynamic key-value pairs
 typedef struct KeyValue {
@@ -43,15 +43,18 @@ int addKeyValue(KeyValue **list, const char *key, const char *value) {
 }
 
 // Release memory allocated for the linked list
-void freeKeyValueList(KeyValue *list) {
-    while (list) {
-        KeyValue *temp = list;
-        list = list->next;
+void freeKeyValueList(KeyValue **list) {
+    if (!list || !*list) return;
+    while (*list) {
+        KeyValue *temp = *list;
+        *list = (*list)->next;
         free(temp->key);
         free(temp->value);
         free(temp);
     }
+    *list = NULL;
 }
+
 
 // Function to load data from a file and parse it into memory
 Person *loadData(const char *filename, int *num_people) {
@@ -219,9 +222,12 @@ void modifyPersonData(Person *person) {
     switch (choice) {
         case 1:
             printf("Enter new ID: ");
-            scanf("%d", &person->id);
+            while (scanf("%d", &person->id) !=1)
+            {
+                printf("Invalid input. Please enter a number: ");
+                scanf("%*s");
+            }
             break;
-
         case 2:
             if (!person->data) {
                 printf("No data available for modification.\n");
@@ -331,7 +337,7 @@ void freePeople(Person *people, int num_people) {
     if (!people) return;
 
     for (int i = 0; i < num_people; ++i) {
-        freeKeyValueList(people[i].data);
+        freeKeyValueList(&people[i].data);
     }
 
     free(people);
@@ -365,7 +371,7 @@ void deletePersonByID(Person *people, int *num_people, int id) {
     for (int i = 0; i < *num_people; ++i) {
         if (people[i].id == id) {
             // Free the key-value pairs associated with the person
-            freeKeyValueList(people[i].data);
+            freeKeyValueList(&people[i].data);
 
             // Move the last person in the array to the position of the deleted person
             people[i] = people[*num_people - 1];
@@ -379,95 +385,3 @@ void deletePersonByID(Person *people, int *num_people, int id) {
     }
     printf("Person with ID %d not found.\n", id);
 }
-
-int main() {
-    int num_people = 0;
-    Person *people = NULL;
-    char file_name[100];
-    int choice;
-
-    do {
-        // Print menu options
-        printf("Menu Options:\n");
-        printf("1. Load data from json file\n");
-        printf("2. Print data\n");
-        printf("3. Modify data based on ID\n");
-        printf("4. Delete data based on ID\n");
-        printf("5. Create new data\n");
-        printf("6. Save data to file\n");
-        printf("7. Exit\n");
-        printf("Enter your choice: ");
-        
-        // Get user choice
-        scanf("%d", &choice);
-
-        // Consume the newline character left in the input buffer
-        while (getchar() != '\n');
-
-        switch (choice) {
-            case 1:
-                printf("Choose file to load: ");
-                scanf("%99s", file_name);
-                // Load data from a file
-                people = loadData(file_name, &num_people);
-                if (!people) {
-                    printf("Loading data failed\n");
-                    return 1;
-                } else {
-                    printf("Data loaded succesfully\n");
-                }
-                break; 
-
-            case 2:
-                for (int i = 0; i < num_people; ++i) {
-                    printf("Person %d:\n", i + 1);
-                    printPersonData(&people[i]);
-                }
-                break;
-
-            case 3:
-                printf("Modify data based on ID\n");
-                modifyDataBasedOnID(people, num_people);
-                break;
-
-            case 4:
-                int personID;
-                if (num_people == 0) {
-                    printf("No data to delete.\n");
-                    break;
-                }
-
-                printf("Enter the ID of the person to delete: ");
-                scanf("%d", &personID);
-
-                deletePersonByID(people, &num_people, personID);
-                break;
-
-            case 5:
-                addNewData(&people, &num_people);
-                break;
-
-            case 6:
-                printf("Save data to file.\n");
-                saveData(file_name, people, num_people);
-                break;
-
-            case 7:
-                printf("Exiting program.\n");
-                break;
-
-            default:
-                printf("Invalid choice. Please enter a number between 1 and 7.\n");
-                break;
-        }
-
-    } while (choice != 7);
-
-    // Free the allocated memory for the 'people' array
-    for (int i = 0; i < num_people; ++i) {
-        free(people[i].data);
-    }
-    free(people);
-    return 0;
-}
-
