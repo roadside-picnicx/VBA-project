@@ -42,19 +42,19 @@ gcc -o <output_file>.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c
 ```
 
 ## Gcov
-To check code coverage using gcov on Windows 11, you need to add following flags while compiling to generate .gcno files:
+To check code coverage using gcov on Windows 11, you need to add following flags while compiling to generate `.gcno` files:
 ```bash
 gcc -o <output_file>.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c -fprofile-arcs -ftest-coverage 
 ```
 
-Then you need to run executables, that will generate .gcda files.
+Then you need to run executables, that will generate `.gcda` files.
 
-To generate .gcov files, simply run gcov command with the source file and previously generated .gcno and .gcda files:
+To generate `.gcov` files, simply run gcov command with the source file and previously generated `.gcno` and `.gcda` files:
 ```bash
-gcov .\src\main.c .\main-main.gcda .\main-main.gcno
+gcov <file_path>.c <file_path>.gcda <file_path>.gcno
 ```
 
-After this, you should have successfully generated .gcov files. By analyzing aspects of the .gcov files, you can gain valuable insights into the effectiveness of test suite and identify areas of code that may require further testing or optimization.
+After this, you should have successfully generated `.gcov` files. By analyzing aspects of the `.gcov` files, you can gain valuable insights into the effectiveness of test suite and identify areas of code that may require further testing or optimization.
 
 ## Gcov Viewer
 To check code coverage using gcov viewer, use the following commands:
