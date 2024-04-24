@@ -8,7 +8,7 @@ Create a program that will read a text file in JSON format. It stores the data i
 ## Compile
 To compile the project, you can choose to use `make` command or manually compile the files.
 
-The `make` will create `VBA_projekt.exe` and `unitTests.exe` executables, so they can run on Windows and Linux. You can call from the root folder following commands:
+The `make` will create `VBA_projekt.exe` and `unitTests.exe` executables, so they should run on Windows (if you have GnuWin) and Linux. You can call from the root folder following commands:
 ```bash
 # Compile only program
 make 
@@ -38,15 +38,13 @@ To compile on Windows 11, specifically with VS Code:
 ```bash
 # Make sure you are in the root folder
 gcc -o <output_file>.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c  
-# Command for compiling unit tests
-gcc -o <test_output_file>.exe .\tests\funcTest.c .\src\func.c .\cJSON\cJSON.c -lcunit
+# Command for compiling unit tests doesn't work on Windows because it requires fmemopen.
 ```
 
 ## Gcov
 To check code coverage using gcov on Windows 11, you need to add following flags while compiling to generate .gcno files:
 ```bash
-gcc -o main.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c -fprofile-arcs -ftest-coverage 
-gcc -o test.exe .\tests\funcTest.c .\src\func.c .\cJSON\cJSON.c -lcunit -fprofile-arcs -ftest-coverage
+gcc -o <output_file>.exe .\src\func.c .\src\main.c .\cJSON\cJSON.c -fprofile-arcs -ftest-coverage 
 ```
 
 Then you need to run executables, that will generate .gcda files.
@@ -54,7 +52,6 @@ Then you need to run executables, that will generate .gcda files.
 To generate .gcov files, simply run gcov command with the source file and previously generated .gcno and .gcda files:
 ```bash
 gcov .\src\main.c .\main-main.gcda .\main-main.gcno
-gcov .\tests\funcTest.c .\test-funcTest.gcno .\test-funcTest.gcda
 ```
 
 After this, you should have successfully generated .gcov files. By analyzing aspects of the .gcov files, you can gain valuable insights into the effectiveness of test suite and identify areas of code that may require further testing or optimization.
